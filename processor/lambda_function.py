@@ -13,14 +13,15 @@ class Slack:
     POST_RESPONSE = 'https://www.slack.com/api/chat.postMessage'
 
 
-def merge_all_messages(messages):
-    combined_msg = ''
+def merge_messages_into_conversation(messages):
+    conversation = []
     for message in messages:
-        # print(message['text'])
-        combined_msg += message['text'].strip().replace('```', '').replace('\n\n', '\n') + '\n\n'
+        role = 'user'
+        if message.get('bot_id') is not None:
+            role = 'assistant'
+        conversation.append({'role': role, 'content': message['text']})
 
-    print(f"Message: {combined_msg}")
-    return combined_msg
+    return conversation
 
 
 def save_msg_with_response(payload, response):
@@ -45,7 +46,7 @@ def save_msg_with_response(payload, response):
 
 def get_conversation(payload):
     if payload.get('thread_ts', None) is None:
-        return payload['text']
+        return [{"role": "user", "content": payload['text']}]
     else:
         params = {
             'channel': payload['channel'],
@@ -53,7 +54,7 @@ def get_conversation(payload):
         }
         converstation = requests.post(Slack.GET_CONVERSATION, params=params, headers=header)
         data = converstation.json()
-        return merge_all_messages(data['messages'])
+        return merge_messages_into_conversation(data['messages'])
 
 
 def lambda_handler(event, context):
