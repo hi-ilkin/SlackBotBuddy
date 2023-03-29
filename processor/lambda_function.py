@@ -29,7 +29,6 @@ def save_msg_with_response(payload, response):
     table = client.Table("messageDataWithResponse")
 
     p_event = payload['event']
-
     item = {
         "event_id": payload['event_id'],
         "channel": p_event['channel'],
@@ -37,11 +36,13 @@ def save_msg_with_response(payload, response):
         "text": p_event['text'],
         "ts": p_event['ts'],
         "thread_ts": p_event.get('thread_ts', None),
-        "open_ai_response": response['choices'][0]['text'],
+        "open_ai_response": AI.get_formatted_response(response),
         "open_ai_usage": response['usage']
     }
 
-    table.put_item(Item=item)
+    response = table.put_item(Item=item)
+    if response['ResponseMetadata']['HTTPStatusCode'] != 200:
+        print('Write failed')
 
 
 def get_conversation(payload):
@@ -58,7 +59,6 @@ def get_conversation(payload):
 
 
 def lambda_handler(event, context):
-    print(f'event: {event} type: {type(event)}')
 
     for record in event['Records']:
         body = json.loads(record['body'])
