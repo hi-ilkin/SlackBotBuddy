@@ -6,7 +6,7 @@ openai.api_key = os.environ.get('OPENAI_TOKEN')
 
 def get_openai_response(message):
     response = openai.ChatCompletion.create(
-        model="gpt-3.5-turbo",
+        model="gpt-4",
         messages=message,
         top_p=1
     )
